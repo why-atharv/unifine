@@ -29,9 +29,10 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import { mockSignIn, mockSignUp } from "@/lib/mock-backend";
 
-// Demo accounts are created by `npm run db:seed`. Never show/prefill passwords on a production deployment.
-const SHOW_DEMO = process.env.NODE_ENV !== "production";
+// Demo accounts are pre-loaded in the browser for easy presentation to faculty!
+const SHOW_DEMO = true;
 
 const DEMO: Record<Role, { email: string; password: string; hint: string }> = {
   ADMIN: { email: "admin@krmu.edu.in", password: "Admin@123", hint: "Dr. Meera Kapoor · Dean Student Affairs" },
@@ -110,20 +111,14 @@ export function Login({
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // students may type just their roll number
-        body: JSON.stringify({ email: ROLL_RE.test(email.trim()) ? studentEmail(email) : email.trim(), password }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(data.error || `Login failed (error ${res.status}).`);
-        return;
-      }
-      onLogin({ ...data.user, token: data.token }, data.student ?? null);
-    } catch {
-      setError("Network error. Please try again.");
+      // Simulate quick network response
+      await new Promise((r) => setTimeout(r, 200));
+      const targetEmail = ROLL_RE.test(email.trim()) ? studentEmail(email) : email.trim();
+      const res = mockSignIn(targetEmail, password);
+      onLogin(res.user, res.student);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Login failed. Please try again.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -163,27 +158,20 @@ export function Login({
 
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          role: signupRole,
-          name,
-          email: mail,
-          password: suPassword,
-          ...(signupRole === "STUDENT"
-            ? { rollNumber: roll, department: suSchool, programme: suProgramme.trim(), year: suYear }
-            : { department: suSchool, designation: suDesignation.trim() }),
-        }),
+      await new Promise((r) => setTimeout(r, 250));
+      const res = mockSignUp({
+        role: signupRole,
+        name,
+        email: mail,
+        password: suPassword,
+        ...(signupRole === "STUDENT"
+          ? { rollNumber: roll, department: suSchool, programme: suProgramme.trim(), year: suYear }
+          : { department: suSchool, designation: suDesignation.trim() }),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(data.error || `Registration failed (error ${res.status}). Please try again.`);
-        return;
-      }
-      onLogin({ ...data.user, token: data.token }, data.student ?? null);
-    } catch {
-      setError("Network error. Please try again.");
+      onLogin(res.user, res.student);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Registration failed. Please try again.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -283,7 +271,7 @@ export function Login({
                   >
                     <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
                     <span>
-                      Dev only — tap to fill demo {role.toLowerCase()} ({DEMO[role].email}). Requires <code>npm run db:seed</code>.
+                      Demo account — tap to auto-fill {role.toLowerCase()} ({DEMO[role].email})
                     </span>
                   </button>
                 )}

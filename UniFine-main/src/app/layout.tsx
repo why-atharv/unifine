@@ -1,25 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Lexend } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { MotionProvider } from "@/components/unifine/motion";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-// Rounded geometric sans — closest match to the iCloudEMS / KRMU student app typography
-const lexend = Lexend({
-  variable: "--font-lexend",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "UniFine · KR Mangalam University — Fine Management Portal",
@@ -53,7 +35,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${lexend.variable} ${geistSans.variable} ${geistMono.variable} bg-surface font-sans text-foreground antialiased`}
+        className="bg-surface font-sans text-foreground antialiased"
       >
         <MotionProvider>{children}</MotionProvider>
         <Toaster />

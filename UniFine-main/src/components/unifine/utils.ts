@@ -1,4 +1,5 @@
 import type { SessionUser } from "./types";
+import { handleMockApi } from "@/lib/mock-backend";
 
 export function inr(n: number): string {
   return "₹" + new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(n);
@@ -60,27 +61,9 @@ export function emitNotificationsChanged() {
   if (typeof window !== "undefined") window.dispatchEvent(new Event(NOTIFS_CHANGED_EVENT));
 }
 
-// API helper — sends the signed session token; the server derives identity from it.
+// Client-side API helper — completely handles requests in-browser with mock backend
 export async function api<T>(session: SessionUser | null, path: string, init?: RequestInit): Promise<T> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(init?.headers as Record<string, string> | undefined),
-  };
-  if (session?.token) headers.Authorization = `Bearer ${session.token}`;
-  let res: Response;
-  try {
-    res = await fetch(path, { ...init, headers });
-  } catch {
-    throw new Error("Network error — please check your connection and try again.");
-  }
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    if (res.status === 401 && session && typeof window !== "undefined") {
-      window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
-    }
-    throw new Error((data as { error?: string }).error || `Request failed (${res.status})`);
-  }
-  return data as T;
+  return handleMockApi<T>(session, path, init);
 }
 
 /** yyyy-mm-dd in the user's local timezone (toISOString() is UTC and shows the wrong day in IST before 5:30 am). */
