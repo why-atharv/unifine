@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* Removed output: "standalone" — Netlify uses its own serverless adapter */
+  /* Removed output: "standalone" — Vercel handles this automatically */
   typescript: {
     ignoreBuildErrors: false,
   },
